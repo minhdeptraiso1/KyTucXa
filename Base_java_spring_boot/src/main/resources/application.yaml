@@ -1,0 +1,86 @@
+server:
+  servlet:
+    context-path: ${CONTEXT_PATH}
+spring:
+  datasource:
+    url: ${DB_URL}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+
+  flyway:
+    baseline-on-migrate: true
+
+  data:
+    redis:
+      host: ${REDIS_HOST}
+      port: ${REDIS_PORT}
+
+  cache:
+    type: redis
+
+  mail:
+    host: ${MAIL_HOST:smtp.gmail.com}
+    port: ${MAIL_PORT:587}
+    username: ${MAIL_USERNAME:}
+    password: ${MAIL_PASSWORD:}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+            required: true
+    default-encoding: UTF-8
+
+  thymeleaf:
+    prefix: classpath:/templates/
+    suffix: .html
+    mode: HTML
+    encoding: UTF-8
+    cache: false
+
+  ai:
+    google:
+      genai:
+        project-id: ${GEMINI_PROJECT_ID:}
+        api-key: ${GEMINI_API_KEY:}
+        chat:
+          options:
+            model: ${GEMINI_MODEL:gemini-2.5-flash}
+
+jwt:
+  access-token-expiration: ${JWT_ACCESS_EXPIRATION}
+  refresh-token-expiration: ${JWT_REFRESH_EXPIRATION}
+  secret: ${JWT_SECRET}
+
+springdoc:
+  swagger-ui:
+    path: /swagger
+
+app:
+  frontend-url: ${APP_FRONTEND_URL:http://localhost:5173}
+  mail:
+    enabled: ${MAIL_ENABLED:false}
+    from: ${MAIL_FROM:KTX UET <no-reply@localhost>}
+  cache:
+    default-ttl: ${CACHE_DEFAULT_TTL}
+    ttl:
+      user_detail: ${CACHE_TTL_USER_DETAIL}
+      user_current: ${CACHE_TTL_USER_CURRENT}
+      user_search: ${CACHE_TTL_USER_SEARCH}
+
+payment:
+  vn-pay:
+    vnp-url: ${VNPAY_URL:https://sandbox.vnpayment.vn/paymentv2/vpcpay.html}
+    tmn-code: ${VNPAY_TMN_CODE:}
+    secret-key: ${VNPAY_SECRET_KEY:}
+    return-url: ${VNPAY_RETURN_URL:http://localhost:5173/payment/vnpay-return}
+    ipn-url: ${VNPAY_IPN_URL:http://localhost:8080/api/v1/payments/vnpay/ipn}
+    version: ${VNPAY_VERSION:2.1.0}
+    command: ${VNPAY_COMMAND:pay}
+    order-type: ${VNPAY_ORDER_TYPE:other}
