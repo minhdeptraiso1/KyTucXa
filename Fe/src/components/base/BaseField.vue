@@ -13,7 +13,8 @@ const props = withDefaults(defineProps<{
   error?: string
   required?: boolean
   showToggle?: boolean
-}>(), { type: 'text', placeholder: '', autocomplete: 'off', error: '', required: false, showToggle: false })
+  disabled?: boolean
+}>(), { type: 'text', placeholder: '', autocomplete: 'off', error: '', required: false, showToggle: false, disabled: false })
 
 const emit = defineEmits<{ 'update:modelValue': [value: string] }>()
 
@@ -38,6 +39,7 @@ const effectiveType = computed(() => {
         :placeholder="placeholder"
         :autocomplete="autocomplete"
         :invalid="Boolean(error)"
+        :disabled="disabled"
         :style="showToggle && type === 'password' ? 'padding-right: 3rem' : ''"
         @update:model-value="emit('update:modelValue', $event)"
       />

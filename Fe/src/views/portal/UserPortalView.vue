@@ -12,6 +12,7 @@ import { useToast } from '@/composables/useToast'
 import { registrationService, type Assignment, type Registration } from '@/services/registrationService'
 import { contractService, type Contract } from '@/services/contractService'
 import { apiErrorMessage } from '@/utils/apiError'
+import { enumLabel, formatDateVi } from '@/utils/display'
 
 const toast = useToast()
 const loading = ref(true)
@@ -148,8 +149,8 @@ onMounted(load)
               <article v-for="item in registrations" :key="item.id" class="rounded-app-md border border-app-border bg-app-bg p-4">
                 <div class="flex flex-wrap items-start justify-between gap-3">
                   <div>
-                    <p class="font-bold text-app-ink">{{ item.requestedRoomType }} · {{ item.requestedGenderType }}</p>
-                    <p class="mt-1 text-xs text-app-muted">Nhận phòng từ {{ item.preferredStartDate }}</p>
+                    <p class="font-bold text-app-ink">{{ enumLabel(item.requestedRoomType) }} · {{ enumLabel(item.requestedGenderType) }}</p>
+                    <p class="mt-1 text-xs text-app-muted">Nhận phòng từ {{ formatDateVi(item.preferredStartDate) }}</p>
                   </div>
                   <BaseBadge :tone="badgeTone(item.status)">{{ statusLabel(item.status) }}</BaseBadge>
                 </div>
@@ -168,7 +169,7 @@ onMounted(load)
               <div v-if="assignments.length" class="mt-4 grid gap-3">
                 <div v-for="item in assignments" :key="item.id" class="rounded-app-md bg-app-bg p-4">
                   <div class="flex justify-between gap-3"><strong class="text-app-ink">{{ item.buildingCode }} · {{ item.roomNumber }} · Giường {{ item.bedNumber }}</strong><BaseBadge :tone="badgeTone(item.status)">{{ statusLabel(item.status) }}</BaseBadge></div>
-                  <p class="mt-2 text-xs text-app-muted">Tầng {{ item.floorNumber }} · từ {{ item.startDate }}</p>
+                  <p class="mt-2 text-xs text-app-muted">Tầng {{ item.floorNumber }} · từ {{ formatDateVi(item.startDate) }}</p>
                 </div>
               </div>
               <p v-else class="mt-4 text-sm text-app-muted">Chưa được phân giường.</p>
@@ -180,7 +181,7 @@ onMounted(load)
               <div v-if="contracts.length" class="mt-4 grid gap-3">
                 <div v-for="item in contracts" :key="item.id" class="rounded-app-md bg-app-bg p-4">
                   <div class="flex flex-wrap justify-between gap-3"><strong class="text-app-ink">{{ item.contractCode }}</strong><BaseBadge :tone="badgeTone(item.status)">{{ statusLabel(item.status) }}</BaseBadge></div>
-                  <p class="mt-2 text-xs text-app-muted">{{ item.startDate }} → {{ item.endDate }}</p>
+                  <p class="mt-2 text-xs text-app-muted">{{ formatDateVi(item.startDate) }} → {{ formatDateVi(item.endDate) }}</p>
                   <p class="mt-2 font-semibold text-app-ink">{{ Number(item.rentalPrice).toLocaleString('vi-VN') }} đ/tháng</p>
                 </div>
               </div>

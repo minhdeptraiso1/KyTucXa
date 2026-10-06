@@ -230,6 +230,15 @@ export const facilityService = {
     return res.data
   },
 
+  async uploadRoomImage(file: File) {
+    const formData = new FormData()
+    formData.append('file', file)
+    const res = await api.post<{ data: { imageUrl: string } }>('/rooms/images', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    })
+    return res.data.data
+  },
+
   async updateRoom(id: string, data: {
     roomNumber: string
     roomType: string

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import AppLayout from '@/layouts/AppLayout.vue'
 import BaseButton from '@/components/base/BaseButton.vue'
 import BaseCard from '@/components/base/BaseCard.vue'
@@ -10,6 +10,7 @@ import BaseModal from '@/components/base/BaseModal.vue'
 import BaseLabel from '@/components/base/BaseLabel.vue'
 import BaseField from '@/components/base/BaseField.vue'
 import BaseCheckbox from '@/components/base/BaseCheckbox.vue'
+import BaseFileInput from '@/components/base/BaseFileInput.vue'
 import {
   facilityService,
   type Building,
@@ -20,6 +21,7 @@ import {
   type FacilityOverviewStats,
 } from '@/services/facilityService'
 import { useToast } from '@/composables/useToast'
+import { formatDateVi } from '@/utils/display'
 
 const toast = useToast()
 
@@ -84,6 +86,9 @@ const floorForm = ref({
 
 // Modals: Add Room
 const showAddRoomModal = ref(false)
+const roomImageFile = ref<File | null>(null)
+const roomImagePreview = ref('')
+const roomImageInputKey = ref(0)
 const roomForm = ref({
   floorId: '',
   roomNumber: '',
@@ -122,6 +127,16 @@ const roomPricePolicyOptions = computed(() => [
     .filter((policy) => policy.isActive && policy.roomType === roomForm.value.roomType)
     .map((policy) => ({ label: `${policy.name} · ${formatCurrency(policy.pricePerMonth)}`, value: policy.id })),
 ])
+const roomCapacityByType = {
+  STANDARD_8: '8',
+  STANDARD_6: '6',
+  PREMIUM_4: '4',
+} as const
+
+watch(() => roomForm.value.roomType, (roomType) => {
+  roomForm.value.capacity = roomCapacityByType[roomType as keyof typeof roomCapacityByType]
+  roomForm.value.pricePolicyId = ''
+})
 
 // Helpers
 function formatCurrency(amount: number) {
@@ -340,7 +355,25 @@ function openCreateRoom() {
     toast.warning('Tòa nhà chưa có tầng. Hãy thêm tầng trước khi tạo phòng.')
     return
   }
+  roomImageFile.value = null
+  if (roomImagePreview.value) URL.revokeObjectURL(roomImagePreview.value)
+  roomImagePreview.value = ''
+  roomImageInputKey.value += 1
   showAddRoomModal.value = true
+}
+
+function handleRoomImageSelected(file: File | null) {
+  if (roomImagePreview.value) URL.revokeObjectURL(roomImagePreview.value)
+  const supportedTypes = ['image/jpeg', 'image/png', 'image/webp']
+  if (file && (!supportedTypes.includes(file.type) || file.size > 5 * 1024 * 1024)) {
+    roomImageFile.value = null
+    roomImagePreview.value = ''
+    roomImageInputKey.value += 1
+    toast.error('Ảnh phòng phải là JPG, PNG hoặc WEBP và không vượt quá 5 MB.')
+    return
+  }
+  roomImageFile.value = file
+  roomImagePreview.value = file ? URL.createObjectURL(file) : ''
 }
 
 async function handleCreateFloor() {
@@ -381,12 +414,16 @@ async function handleCreateRoom() {
   modalLoading.value = true
   try {
     const currentBld = buildings.value.find((b) => b.id === selectedBuildingId.value)
+    const uploadedImage = roomImageFile.value
+      ? await facilityService.uploadRoomImage(roomImageFile.value)
+      : null
     const data = {
       ...roomForm.value,
       capacity: parseInt(roomForm.value.capacity) || 8,
       areaSqm: parseFloat(roomForm.value.areaSqm) || 32,
       floorId: selectedFloorId.value,
       pricePolicyId: roomForm.value.pricePolicyId || undefined,
+      imageUrl: uploadedImage?.imageUrl || undefined,
       genderType: currentBld?.genderType === 'MIXED' ? roomForm.value.genderType : currentBld?.genderType || 'MALE',
     }
     const res = await facilityService.createRoom(data)
@@ -396,6 +433,9 @@ async function handleCreateRoom() {
     }
     toast.success(`Tạo phòng ${roomForm.value.roomNumber} thành công!`)
     showAddRoomModal.value = false
+    roomImageFile.value = null
+    if (roomImagePreview.value) URL.revokeObjectURL(roomImagePreview.value)
+    roomImagePreview.value = ''
   } catch (err: any) {
     toast.error(err.response?.data?.error?.message || 'Có lỗi khi tạo phòng.')
   } finally {
@@ -513,7 +553,7 @@ onMounted(() => {
         <div>
           <div class="facility-header__badge">
             <span class="badge-dot" />
-            <span>PHASE 2 — QUẢN LÝ CƠ SỞ VẬT CHẤT</span>
+            <span>QUẢN LÝ CƠ SỞ VẬT CHẤT</span>
           </div>
           <h1 class="facility-header__title">Sơ đồ Cơ sở Vật chất KTX</h1>
           <p class="facility-header__subtitle">
@@ -529,15 +569,8 @@ onMounted(() => {
             </svg>
             Thêm tòa nhà
           </BaseButton>
-          <BaseButton variant="secondary" :disabled="!selectedBuildingId" @click="showAddFloorModal = true">
+          <BaseButton variant="primary" :disabled="!selectedBuildingId" @click="showAddFloorModal = true">
             Thêm tầng
-          </BaseButton>
-          <BaseButton variant="ghost" :disabled="!selectedFloorId" @click="openCreateRoom">
-            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
-              <polyline points="9 22 9 12 15 12 15 22" />
-            </svg>
-            Thêm phòng mới
           </BaseButton>
         </div>
       </header>
@@ -701,7 +734,7 @@ onMounted(() => {
                 </p>
               </div>
 
-              <BaseButton variant="ghost" size="sm" @click="showAddRoomModal = true">
+              <BaseButton variant="primary" size="sm" :disabled="!selectedFloorId" @click="openCreateRoom">
                 + Thêm phòng vào tầng này
               </BaseButton>
             </div>
@@ -793,9 +826,9 @@ onMounted(() => {
               v-model="roomFilterStatus"
               :options="[
                 { label: 'Tất cả trạng thái', value: '' },
-                { label: 'Còn chỗ (AVAILABLE)', value: 'AVAILABLE' },
-                { label: 'Đã đầy (FULL)', value: 'FULL' },
-                { label: 'Bảo trì (MAINTENANCE)', value: 'MAINTENANCE' },
+                { label: 'Còn chỗ', value: 'AVAILABLE' },
+                { label: 'Đã đầy', value: 'FULL' },
+                { label: 'Bảo trì', value: 'MAINTENANCE' },
               ]"
               @change="loadAllRooms"
             />
@@ -902,8 +935,8 @@ onMounted(() => {
               <span class="unit">/ sinh viên / tháng</span>
             </div>
             <div class="policy-card__dates">
-              Hiệu lực từ: <strong>{{ p.effectiveFrom }}</strong>
-              <span v-if="p.effectiveTo"> đến {{ p.effectiveTo }}</span>
+              Hiệu lực từ: <strong>{{ formatDateVi(p.effectiveFrom) }}</strong>
+              <span v-if="p.effectiveTo"> đến {{ formatDateVi(p.effectiveTo) }}</span>
             </div>
             <div class="action-buttons policy-card__actions">
               <BaseButton variant="secondary" size="sm" @click="openEditPolicy(p)">Sửa bảng giá</BaseButton>
@@ -1010,9 +1043,9 @@ onMounted(() => {
               id="bld-gender"
               v-model="buildingForm.genderType"
               :options="[
-                { label: 'Dành cho Nam (MALE)', value: 'MALE' },
-                { label: 'Dành cho Nữ (FEMALE)', value: 'FEMALE' },
-                { label: 'Hỗn hợp Nam & Nữ (MIXED)', value: 'MIXED' },
+                { label: 'Dành cho nam', value: 'MALE' },
+                { label: 'Dành cho nữ', value: 'FEMALE' },
+                { label: 'Dành cho nam và nữ', value: 'MIXED' },
               ]"
             />
           </div>
@@ -1054,7 +1087,7 @@ onMounted(() => {
       <!-- MODAL: ADD ROOM -->
       <BaseModal
         v-model="showAddRoomModal"
-        title="Thêm Phòng Mới"
+        :title="`Thêm phòng vào ${floors.find((floor) => floor.id === selectedFloorId)?.name || 'tầng đã chọn'}`"
       >
         <div class="form-grid">
           <BaseField id="rm-no" v-model="roomForm.roomNumber" label="Số phòng (VD: 201, 305)" required />
@@ -1064,18 +1097,18 @@ onMounted(() => {
               id="rm-type"
               v-model="roomForm.roomType"
               :options="[
-                { label: 'Tiêu chuẩn 8 người (STANDARD_8)', value: 'STANDARD_8' },
-                { label: 'Tiêu chuẩn 6 người (STANDARD_6)', value: 'STANDARD_6' },
-                { label: 'Chất lượng cao 4 người (PREMIUM_4)', value: 'PREMIUM_4' },
+                { label: 'Phòng tiêu chuẩn 8 người', value: 'STANDARD_8' },
+                { label: 'Phòng tiêu chuẩn 6 người', value: 'STANDARD_6' },
+                { label: 'Phòng chất lượng cao 4 người', value: 'PREMIUM_4' },
               ]"
-              @update:model-value="roomForm.pricePolicyId = ''"
             />
           </div>
           <BaseField
             id="rm-cap"
             v-model="roomForm.capacity"
             type="number"
-            label="Sức chứa tối đa (người)"
+            label="Sức chứa tối đa theo loại phòng"
+            disabled
             required
           />
           <BaseField
@@ -1088,7 +1121,18 @@ onMounted(() => {
             <BaseLabel for-id="rm-price-policy">Bảng giá phòng</BaseLabel>
             <BaseSelect id="rm-price-policy" v-model="roomForm.pricePolicyId" :options="roomPricePolicyOptions" />
           </div>
-          <BaseField id="rm-image-url" v-model="roomForm.imageUrl" label="URL ảnh phòng (không bắt buộc)" placeholder="https://..." />
+          <div class="field-item">
+            <BaseLabel for-id="rm-image-file">Hình ảnh phòng</BaseLabel>
+            <BaseFileInput
+              :key="roomImageInputKey"
+              id="rm-image-file"
+              accept="image/jpeg,image/png,image/webp"
+              label="Chọn ảnh từ máy"
+              hint="JPG, PNG hoặc WEBP · tối đa 5 MB"
+              @change="handleRoomImageSelected"
+            />
+            <img v-if="roomImagePreview" class="room-image-preview" :src="roomImagePreview" alt="Ảnh phòng đã chọn" />
+          </div>
           <BaseField id="rm-desc" v-model="roomForm.description" label="Mô tả tiện nghi phòng" />
         </div>
 
@@ -1126,7 +1170,7 @@ onMounted(() => {
           <BaseField v-if="!editingPolicyId" id="policy-from" v-model="policyForm.effectiveFrom" type="date" label="Hiệu lực từ" required />
           <div v-else class="field-item">
             <BaseLabel for-id="policy-effective-from">Hiệu lực từ</BaseLabel>
-            <p id="policy-effective-from" class="policy-static-value">{{ policyForm.effectiveFrom }}</p>
+            <p id="policy-effective-from" class="policy-static-value">{{ formatDateVi(policyForm.effectiveFrom) }}</p>
           </div>
           <BaseField id="policy-to" v-model="policyForm.effectiveTo" type="date" label="Hiệu lực đến (không bắt buộc)" />
           <BaseField id="policy-description" v-model="policyForm.description" label="Mô tả" />
@@ -1195,6 +1239,19 @@ onMounted(() => {
 .facility-header__actions {
   display: flex;
   gap: 12px;
+}
+
+.facility-header__actions :deep(.base-button) {
+  min-width: 9rem;
+}
+
+.room-image-preview {
+  aspect-ratio: 16 / 9;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  margin-top: 0.75rem;
+  object-fit: cover;
+  width: 100%;
 }
 
 /* Stats */
@@ -1794,6 +1851,26 @@ onMounted(() => {
 }
 
 @media (max-width: 1100px) {
+  .facility-header {
+    align-items: stretch;
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  .facility-header__actions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .facility-header__actions :deep(.base-button) {
+    min-width: 0;
+    width: 100%;
+  }
+
+  .facility-stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
   .browser-layout {
     grid-template-columns: 15rem minmax(0, 1fr);
     gap: 16px;
@@ -1810,6 +1887,21 @@ onMounted(() => {
 }
 
 @media (max-width: 760px) {
+  .facility-page {
+    padding: 20px 16px 40px;
+  }
+
+  .facility-header__actions,
+  .facility-stats {
+    grid-template-columns: 1fr;
+  }
+
+  .browser-main__header {
+    align-items: stretch;
+    flex-direction: column;
+    gap: 16px;
+  }
+
   .facility-tabs,
   .browser-layout,
   .filter-grid {

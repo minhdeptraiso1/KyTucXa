@@ -37,7 +37,7 @@ function triggerToastDemo(type: 'success' | 'warning' | 'error' | 'info') {
             <circle cx="12" cy="12" r="10" />
             <polygon points="12 6 12 12 16 14" />
           </svg>
-          STAFF / OVERVIEW
+          TỔNG QUAN VẬN HÀNH
         </span>
         <h1>Trung tâm vận hành số KTX</h1>
         <p>Giám sát thời gian thực phòng ở, hợp đồng sinh viên và tài chính.</p>
@@ -123,7 +123,7 @@ function triggerToastDemo(type: 'success' | 'warning' | 'error' | 'info') {
     <!-- Interactive Toast Tester & System Tools -->
     <BaseCard class="dashboard-note" style="margin-top: 2rem;">
       <div>
-        <span class="eyebrow">TOAST NOTIFICATIONS</span>
+        <span class="eyebrow">THÔNG BÁO HỆ THỐNG</span>
         <h2>Thử nghiệm hệ thống thông báo Toast</h2>
         <p>Kiểm tra các trạng thái thông báo phản hồi người dùng thời gian thực.</p>
         <div style="display: flex; gap: 0.5rem; flex-wrap: wrap; margin-top: 1rem;">

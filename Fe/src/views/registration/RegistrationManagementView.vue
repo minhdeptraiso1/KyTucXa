@@ -12,6 +12,7 @@ import BaseTextarea from '@/components/base/BaseTextarea.vue'
 import { useToast } from '@/composables/useToast'
 import { registrationService, type Assignment, type Bed, type Registration, type Room } from '@/services/registrationService'
 import { apiErrorMessage } from '@/utils/apiError'
+import { enumLabel, formatDateVi } from '@/utils/display'
 
 const toast = useToast()
 const loading = ref(false)
@@ -128,7 +129,7 @@ onMounted(load)
     <main class="mx-auto w-full max-w-[1500px] p-5 sm:p-7 lg:p-10">
       <header class="mb-7 flex flex-col gap-5 xl:flex-row xl:items-end xl:justify-between">
         <div>
-          <span class="font-mono text-xs font-bold uppercase tracking-[0.2em] text-app-primary">Phase 3 / Registration</span>
+          <span class="font-mono text-xs font-bold uppercase tracking-[0.2em] text-app-primary">Quản lý hồ sơ nội trú</span>
           <h1 class="mt-2 font-display text-3xl font-extrabold tracking-tight text-app-ink sm:text-5xl">Đăng ký & phân phòng</h1>
           <p class="mt-2 text-app-muted">Duyệt nhu cầu trước, sau đó gán đúng phòng và giường còn trống.</p>
         </div>
@@ -138,11 +139,11 @@ onMounted(load)
       <BaseCard class="mb-5 !rounded-app-lg !border-app-border !bg-app-surface !p-4">
         <form class="grid gap-3 md:grid-cols-[minmax(0,1fr)_240px_auto]" @submit.prevent="load">
           <BaseField id="registration-keyword" v-model="keyword" label="Tìm sinh viên" placeholder="Mã SV, họ tên hoặc email" />
-          <div>
+          <div class="grid gap-[0.35rem]">
             <BaseLabel for-id="registration-status">Trạng thái</BaseLabel>
             <BaseSelect id="registration-status" v-model="status" :options="statusOptions" />
           </div>
-          <div class="flex items-end"><BaseButton type="submit" :loading="loading">Lọc danh sách</BaseButton></div>
+          <div class="flex items-end"><BaseButton type="submit" block :loading="loading">Lọc danh sách</BaseButton></div>
         </form>
       </BaseCard>
 
@@ -154,10 +155,10 @@ onMounted(load)
               <p class="mt-1 text-sm text-app-muted">{{ item.studentCode || 'Chưa có mã SV' }} · {{ item.email }}</p>
             </div>
             <div class="grid grid-cols-2 gap-3 text-sm">
-              <div><span class="block text-xs text-app-muted">Nhu cầu</span><strong class="text-app-ink">{{ item.requestedRoomType }}</strong></div>
-              <div><span class="block text-xs text-app-muted">Đối tượng</span><strong class="text-app-ink">{{ item.requestedGenderType }}</strong></div>
-              <div><span class="block text-xs text-app-muted">Nhận phòng</span><strong class="text-app-ink">{{ item.preferredStartDate }}</strong></div>
-              <div><span class="block text-xs text-app-muted">Kết thúc</span><strong class="text-app-ink">{{ item.preferredEndDate || 'Chưa xác định' }}</strong></div>
+              <div><span class="block text-xs text-app-muted">Nhu cầu</span><strong class="text-app-ink">{{ enumLabel(item.requestedRoomType) }}</strong></div>
+              <div><span class="block text-xs text-app-muted">Đối tượng</span><strong class="text-app-ink">{{ enumLabel(item.requestedGenderType) }}</strong></div>
+              <div><span class="block text-xs text-app-muted">Nhận phòng</span><strong class="text-app-ink">{{ formatDateVi(item.preferredStartDate) }}</strong></div>
+              <div><span class="block text-xs text-app-muted">Kết thúc</span><strong class="text-app-ink">{{ formatDateVi(item.preferredEndDate) }}</strong></div>
             </div>
             <div class="flex flex-wrap justify-end gap-2">
               <template v-if="item.status === 'PENDING'">

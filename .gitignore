@@ -84,3 +84,4 @@ temp/
 *.tmp
 .agents/
 .system_generated/
+Base_java_spring_boot/uploads/

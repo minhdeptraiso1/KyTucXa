@@ -335,7 +335,7 @@ Tiến độ tổng thể: `3 / 9 phase hoàn thành`.
 - [x] STAFF: quản lý Building (Thêm, sửa, xem danh sách tòa nhà).
 - [x] STAFF: quản lý Floor (Hiển thị và lọc tầng theo tòa nhà).
 - [x] STAFF: quản lý Room (Danh sách, tạo phòng, chuyển trạng thái bảo trì/sẵn sàng).
-- [x] Room hỗ trợ URL ảnh đại diện; frontend dùng ảnh mặc định khi URL trống hoặc tải lỗi.
+- [x] Room hỗ trợ chọn ảnh từ máy, upload JPG/PNG/WEBP tối đa 5 MB và dùng ảnh mặc định khi URL trống hoặc tải lỗi.
 - [x] STAFF: quản lý Bed (Xem ma trận giường, đổi trạng thái bảo trì/sẵn sàng với validation).
 - [x] Hiển thị cây Building → Floor → Room → Bed trực quan, mượt mà.
 - [x] Bộ lọc status, gender, room type và availability.
@@ -807,4 +807,6 @@ Mỗi chức năng chỉ được đánh dấu hoàn thành khi tất cả mục
 | 2026-10-03 | 2.0 | Loại bỏ toàn bộ mock Facility, sửa luồng Tòa→Tầng→Phòng bằng UUID thật; bắt đầu Phase 5 với migration V10, Meter/Reading/Tariff, Invoice, Payment trực tiếp và VNPay demo, UI STAFF/USER và test tài chính nền tảng | Codex |
 | 2026-10-03 | 2.1 | Hoàn thiện CRUD bảng giá phòng; bổ sung sửa công tơ/chỉ số/đơn giá có khóa nghiệp vụ; thay VNPay giả lập bằng chuyển hướng Sandbox thật và xác minh callback chặt chẽ | Codex |
 | 2026-10-03 | 2.2 | Nối trang chủ với API public thật cho thống kê, loại phòng và phòng khả dụng; thêm migration V12 lưu URL ảnh phòng và fallback ảnh mặc định khi thiếu/lỗi | Codex |
+| 2026-10-06 | 2.3 | Chuẩn hóa style/kích thước button và bố cục responsive; bỏ nhãn Phase khỏi UI; đồng bộ loại phòng với sức chứa; thêm upload ảnh phòng từ máy; Việt hóa enum và định dạng ngày hiển thị `dd/MM/yyyy` mà không đổi payload Backend | Codex |
+| 2026-10-06 | 2.4 | Cân thẳng ô tìm kiếm–trạng thái–nút lọc; đồng bộ ba nút nhập/xuất danh sách sinh viên và bỏ tên định dạng đặt trong ngoặc trên UI | Codex |
 

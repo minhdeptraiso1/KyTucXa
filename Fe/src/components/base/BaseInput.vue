@@ -6,7 +6,8 @@ withDefaults(defineProps<{
   placeholder?: string
   autocomplete?: string
   invalid?: boolean
-}>(), { type: 'text', placeholder: '', autocomplete: 'off', invalid: false })
+  disabled?: boolean
+}>(), { type: 'text', placeholder: '', autocomplete: 'off', invalid: false, disabled: false })
 
 const emit = defineEmits<{ 'update:modelValue': [value: string] }>()
 </script>
@@ -21,6 +22,7 @@ const emit = defineEmits<{ 'update:modelValue': [value: string] }>()
     :placeholder="placeholder"
     :autocomplete="autocomplete"
     :aria-invalid="invalid"
+    :disabled="disabled"
     @input="emit('update:modelValue', ($event.target as HTMLInputElement).value)"
   />
 </template>

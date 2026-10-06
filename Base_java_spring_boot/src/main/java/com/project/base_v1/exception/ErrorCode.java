@@ -207,6 +207,12 @@ public enum ErrorCode {
             "File CSV không hợp lệ hoặc không có dữ liệu"
     ),
 
+    INVALID_IMAGE_FILE(
+            400013,
+            HttpStatus.BAD_REQUEST,
+            "Ảnh phòng phải là JPG, PNG hoặc WEBP và không vượt quá 5 MB"
+    ),
+
     STUDENT_ALREADY_REGISTERED(
             409010,
             HttpStatus.CONFLICT,
@@ -459,6 +465,12 @@ public enum ErrorCode {
             500008,
             HttpStatus.INTERNAL_SERVER_ERROR,
             "Lỗi xử lý WebSocket"
+    ),
+
+    IMAGE_STORAGE_ERROR(
+            500009,
+            HttpStatus.INTERNAL_SERVER_ERROR,
+            "Không thể lưu ảnh phòng"
     );
 
     private final int code;

@@ -11,6 +11,7 @@ import BaseModal from '@/components/base/BaseModal.vue'
 import BaseSelect from '@/components/base/BaseSelect.vue'
 import { useToast } from '@/composables/useToast'
 import { apiErrorMessage } from '@/utils/apiError'
+import { enumLabel, formatDateVi, formatMonthVi } from '@/utils/display'
 import { billingService, type Invoice, type Meter, type MeterReading, type Payment, type Tariff } from '@/services/billingService'
 import { facilityService, type Room } from '@/services/facilityService'
 import { contractService, type Contract } from '@/services/contractService'
@@ -53,7 +54,7 @@ const dialogTitle = computed(() => {
 })
 
 function money(value: number) { return new Intl.NumberFormat('vi-VN').format(Number(value || 0)) + ' đ' }
-function utilityLabel(value: string) { return value === 'ELECTRICITY' ? 'Điện' : 'Nước' }
+function utilityLabel(value: string) { return enumLabel(value) }
 function statusLabel(value: string) {
   return ({ ISSUED: 'Chưa thanh toán', PARTIALLY_PAID: 'Thanh toán một phần', PAID: 'Đã thanh toán', OVERDUE: 'Quá hạn', CANCELLED: 'Đã hủy', SUCCESS: 'Thành công', PENDING: 'Đang xử lý', FAILED: 'Thất bại' } as Record<string, string>)[value] || value
 }
@@ -167,14 +168,14 @@ onMounted(load)
     <main class="mx-auto w-full max-w-[1500px] p-5 sm:p-7 lg:p-10">
       <header class="mb-7 flex flex-col justify-between gap-5 xl:flex-row xl:items-end">
         <div>
-          <p class="font-mono text-xs font-bold uppercase tracking-[0.2em] text-app-primary">Phase 5 / Billing</p>
+          <p class="font-mono text-xs font-bold uppercase tracking-[0.2em] text-app-primary">Quản lý tài chính nội trú</p>
           <h1 class="mt-2 font-display text-3xl font-extrabold tracking-tight text-app-ink sm:text-5xl">Hóa đơn & Thanh toán</h1>
           <p class="mt-2 max-w-3xl text-app-muted">Quản lý công tơ, chỉ số, đơn giá, công nợ và giao dịch trên dữ liệu PostgreSQL.</p>
         </div>
-        <div class="flex flex-wrap gap-2">
-          <BaseButton variant="secondary" @click="open('meter')">Thêm công tơ</BaseButton>
-          <BaseButton variant="secondary" @click="open('reading')">Nhập chỉ số</BaseButton>
-          <BaseButton variant="secondary" @click="open('tariff')">Thêm đơn giá</BaseButton>
+        <div class="grid grid-cols-2 gap-2 sm:grid-cols-4">
+          <BaseButton @click="open('meter')">Thêm công tơ</BaseButton>
+          <BaseButton @click="open('reading')">Nhập chỉ số</BaseButton>
+          <BaseButton @click="open('tariff')">Thêm đơn giá</BaseButton>
           <BaseButton @click="open('invoice')">Phát hành hóa đơn</BaseButton>
         </div>
       </header>
@@ -197,7 +198,7 @@ onMounted(load)
         <div class="flex justify-end"><BaseButton variant="secondary" :disabled="!unpaidInvoiceOptions.length" @click="open('payment')">Ghi nhận thanh toán trực tiếp</BaseButton></div>
         <article v-for="item in invoices" :key="item.id" class="grid gap-4 rounded-app-lg border border-app-border bg-app-surface p-5 lg:grid-cols-[1.2fr_1fr_1fr_auto] lg:items-center">
           <div><strong class="text-app-ink">{{ item.invoiceCode }}</strong><p class="mt-1 text-sm text-app-muted">{{ item.studentCode || '—' }} · {{ item.studentName }} · Phòng {{ item.roomNumber }}</p></div>
-          <div><p class="text-xs text-app-muted">Kỳ / hạn thanh toán</p><p class="font-semibold text-app-ink">{{ item.billingPeriod.slice(0, 7) }} · {{ item.dueDate }}</p></div>
+          <div><p class="text-xs text-app-muted">Kỳ / hạn thanh toán</p><p class="font-semibold text-app-ink">{{ formatMonthVi(item.billingPeriod) }} · {{ formatDateVi(item.dueDate) }}</p></div>
           <div><p class="text-xs text-app-muted">Còn phải thu</p><p class="font-bold text-app-ink">{{ money(item.remainingAmount) }}</p></div>
           <BaseBadge :tone="tone(item.status)">{{ statusLabel(item.status) }}</BaseBadge>
         </article>
@@ -206,12 +207,12 @@ onMounted(load)
 
       <section v-else-if="activeTab === 'meters'" class="grid gap-6 xl:grid-cols-2">
         <BaseCard class="!p-5"><h2 class="mb-4 text-xl font-bold text-app-ink">Công tơ theo phòng</h2><div class="grid gap-3"><div v-for="item in meters" :key="item.id" class="flex items-center justify-between gap-3 rounded-app-md bg-app-bg p-4"><div><strong class="text-app-ink">{{ item.meterCode }}</strong><p class="text-sm text-app-muted">{{ item.buildingCode }} · {{ item.roomNumber }} · {{ utilityLabel(item.utilityType) }}</p></div><div class="flex items-center gap-2"><BaseBadge :tone="tone(item.status)">{{ item.status === 'ACTIVE' ? 'Đang hoạt động' : 'Tạm ngưng' }}</BaseBadge><BaseButton size="sm" variant="ghost" @click="editMeter(item)">Sửa</BaseButton></div></div><p v-if="!meters.length" class="text-app-muted">Chưa có công tơ.</p></div></BaseCard>
-        <BaseCard class="!p-5"><h2 class="mb-4 text-xl font-bold text-app-ink">Chỉ số gần đây</h2><div class="grid gap-3"><div v-for="item in readings" :key="item.id" class="rounded-app-md bg-app-bg p-4"><div class="flex justify-between gap-3"><strong class="text-app-ink">{{ item.meterCode }} · {{ item.billingPeriod.slice(0, 7) }}</strong><span class="font-bold text-app-primary">{{ item.consumption }} {{ item.utilityType === 'ELECTRICITY' ? 'kWh' : 'm³' }}</span></div><div class="mt-1 flex items-center justify-between gap-3"><p class="text-sm text-app-muted">{{ item.previousValue }} → {{ item.currentValue }}</p><BaseButton size="sm" variant="ghost" @click="editReading(item)">Sửa chỉ số</BaseButton></div></div><p v-if="!readings.length" class="text-app-muted">Chưa có chỉ số.</p></div></BaseCard>
-        <BaseCard class="!p-5 xl:col-span-2"><h2 class="mb-4 text-xl font-bold text-app-ink">Đơn giá điện nước</h2><div class="flex flex-wrap gap-3"><div v-for="item in tariffs" :key="item.id" class="min-w-64 rounded-app-md border border-app-border px-4 py-3"><div class="flex items-center justify-between gap-3"><strong class="text-app-ink">{{ utilityLabel(item.utilityType) }}</strong><BaseBadge :tone="item.active ? 'success' : 'neutral'">{{ item.active ? 'Đang áp dụng' : 'Ngừng áp dụng' }}</BaseBadge></div><p class="mt-2 text-sm text-app-muted">{{ money(item.unitPrice) }}/đơn vị · từ {{ item.effectiveFrom }}<span v-if="item.effectiveTo"> đến {{ item.effectiveTo }}</span></p><div class="mt-3"><BaseButton size="sm" variant="ghost" @click="editTariff(item)">Sửa đơn giá</BaseButton></div></div><p v-if="!tariffs.length" class="text-app-muted">Chưa có đơn giá điện nước.</p></div></BaseCard>
+        <BaseCard class="!p-5"><h2 class="mb-4 text-xl font-bold text-app-ink">Chỉ số gần đây</h2><div class="grid gap-3"><div v-for="item in readings" :key="item.id" class="rounded-app-md bg-app-bg p-4"><div class="flex justify-between gap-3"><strong class="text-app-ink">{{ item.meterCode }} · {{ formatMonthVi(item.billingPeriod) }}</strong><span class="font-bold text-app-primary">{{ item.consumption }} {{ item.utilityType === 'ELECTRICITY' ? 'kWh' : 'm³' }}</span></div><div class="mt-1 flex items-center justify-between gap-3"><p class="text-sm text-app-muted">{{ item.previousValue }} → {{ item.currentValue }}</p><BaseButton size="sm" variant="ghost" @click="editReading(item)">Sửa chỉ số</BaseButton></div></div><p v-if="!readings.length" class="text-app-muted">Chưa có chỉ số.</p></div></BaseCard>
+        <BaseCard class="!p-5 xl:col-span-2"><h2 class="mb-4 text-xl font-bold text-app-ink">Đơn giá điện nước</h2><div class="flex flex-wrap gap-3"><div v-for="item in tariffs" :key="item.id" class="min-w-64 rounded-app-md border border-app-border px-4 py-3"><div class="flex items-center justify-between gap-3"><strong class="text-app-ink">{{ utilityLabel(item.utilityType) }}</strong><BaseBadge :tone="item.active ? 'success' : 'neutral'">{{ item.active ? 'Đang áp dụng' : 'Ngừng áp dụng' }}</BaseBadge></div><p class="mt-2 text-sm text-app-muted">{{ money(item.unitPrice) }}/đơn vị · từ {{ formatDateVi(item.effectiveFrom) }}<span v-if="item.effectiveTo"> đến {{ formatDateVi(item.effectiveTo) }}</span></p><div class="mt-3"><BaseButton size="sm" variant="ghost" @click="editTariff(item)">Sửa đơn giá</BaseButton></div></div><p v-if="!tariffs.length" class="text-app-muted">Chưa có đơn giá điện nước.</p></div></BaseCard>
       </section>
 
       <section v-else class="grid gap-3">
-        <article v-for="item in payments" :key="item.id" class="grid gap-3 rounded-app-lg border border-app-border bg-app-surface p-5 sm:grid-cols-[1fr_1fr_auto] sm:items-center"><div><strong class="text-app-ink">{{ item.paymentCode }}</strong><p class="text-sm text-app-muted">{{ item.invoiceCode }} · {{ item.method }}</p></div><p class="font-bold text-app-ink">{{ money(item.amount) }}</p><BaseBadge :tone="tone(item.status)">{{ statusLabel(item.status) }}</BaseBadge></article>
+        <article v-for="item in payments" :key="item.id" class="grid gap-3 rounded-app-lg border border-app-border bg-app-surface p-5 sm:grid-cols-[1fr_1fr_auto] sm:items-center"><div><strong class="text-app-ink">{{ item.paymentCode }}</strong><p class="text-sm text-app-muted">{{ item.invoiceCode }} · {{ enumLabel(item.method) }}</p></div><p class="font-bold text-app-ink">{{ money(item.amount) }}</p><BaseBadge :tone="tone(item.status)">{{ statusLabel(item.status) }}</BaseBadge></article>
         <p v-if="!payments.length" class="rounded-app-lg border border-dashed border-app-border p-10 text-center text-app-muted">Chưa có giao dịch.</p>
       </section>
     </main>

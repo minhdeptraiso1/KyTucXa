@@ -7,6 +7,7 @@ import BaseCard from '@/components/base/BaseCard.vue'
 import { useToast } from '@/composables/useToast'
 import { apiErrorMessage } from '@/utils/apiError'
 import { billingService, type Invoice, type Payment } from '@/services/billingService'
+import { enumLabel, formatDateVi, formatMonthVi } from '@/utils/display'
 
 const toast = useToast()
 const loading = ref(true)
@@ -66,7 +67,7 @@ onMounted(load)
           <h2 class="text-xl font-bold text-app-ink">Lịch sử hóa đơn</h2>
           <article v-for="item in invoices" :key="item.id" class="rounded-app-lg border border-app-border bg-app-surface p-5">
             <div class="flex flex-wrap items-start justify-between gap-3">
-              <div><strong class="text-app-ink">{{ item.invoiceCode }} · Phòng {{ item.roomNumber }}</strong><p class="mt-1 text-sm text-app-muted">Kỳ {{ item.billingPeriod.slice(0, 7) }} · hạn {{ item.dueDate }}</p></div>
+              <div><strong class="text-app-ink">{{ item.invoiceCode }} · Phòng {{ item.roomNumber }}</strong><p class="mt-1 text-sm text-app-muted">{{ formatMonthVi(item.billingPeriod) }} · hạn {{ formatDateVi(item.dueDate) }}</p></div>
               <BaseBadge :tone="tone(item.status)">{{ statusLabel(item.status) }}</BaseBadge>
             </div>
             <div class="mt-4 grid gap-2 rounded-app-md bg-app-bg p-4">
@@ -80,7 +81,7 @@ onMounted(load)
 
         <div class="grid content-start gap-4">
           <h2 class="text-xl font-bold text-app-ink">Lịch sử thanh toán</h2>
-          <article v-for="item in payments" :key="item.id" class="rounded-app-lg border border-app-border bg-app-surface p-5"><div class="flex justify-between gap-3"><strong class="text-app-ink">{{ item.paymentCode }}</strong><BaseBadge :tone="tone(item.status)">{{ statusLabel(item.status) }}</BaseBadge></div><p class="mt-2 text-sm text-app-muted">{{ item.invoiceCode }} · {{ item.method }}</p><p class="mt-3 text-xl font-bold text-app-ink">{{ money(item.amount) }}</p></article>
+          <article v-for="item in payments" :key="item.id" class="rounded-app-lg border border-app-border bg-app-surface p-5"><div class="flex justify-between gap-3"><strong class="text-app-ink">{{ item.paymentCode }}</strong><BaseBadge :tone="tone(item.status)">{{ statusLabel(item.status) }}</BaseBadge></div><p class="mt-2 text-sm text-app-muted">{{ item.invoiceCode }} · {{ enumLabel(item.method) }}</p><p class="mt-3 text-xl font-bold text-app-ink">{{ money(item.amount) }}</p></article>
           <p v-if="!payments.length" class="rounded-app-lg border border-dashed border-app-border p-8 text-center text-app-muted">Chưa có giao dịch.</p>
         </div>
       </section>

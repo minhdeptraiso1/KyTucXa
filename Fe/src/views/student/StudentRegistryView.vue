@@ -26,8 +26,8 @@ const searchQuery = ref('')
 const selectedStatus = ref('')
 const statusOptions = [
   { label: 'Tất cả trạng thái', value: '' },
-  { label: 'Đang hoạt động (ACTIVE)', value: 'ACTIVE' },
-  { label: 'Tạm ngưng (INACTIVE)', value: 'INACTIVE' },
+  { label: 'Đang hoạt động', value: 'ACTIVE' },
+  { label: 'Tạm ngưng', value: 'INACTIVE' },
 ]
 
 // Modal & Import state
@@ -201,14 +201,14 @@ function resetImportModal() {
       </div>
 
       <!-- Action Buttons -->
-      <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
-        <BaseButton type="button" variant="secondary" @click="handleExportCsv">
-          Xuất danh sách (Excel)
+      <div class="registry-header-actions">
+        <BaseButton type="button" block @click="handleExportCsv">
+          Xuất danh sách
         </BaseButton>
-        <BaseButton type="button" variant="secondary" @click="handleDownloadTemplate">
-          Tải file mẫu (.xlsx)
+        <BaseButton type="button" block @click="handleDownloadTemplate">
+          Tải file mẫu
         </BaseButton>
-        <BaseButton type="button" @click="showImportModal = true">
+        <BaseButton type="button" block @click="showImportModal = true">
           Nhập file CSV
         </BaseButton>
       </div>
@@ -228,7 +228,7 @@ function resetImportModal() {
     <section class="metric-grid" aria-label="Thống kê hồ sơ sinh viên">
       <BaseCard>
         <div class="metric-header">
-          <span class="metric-label">Tổng sinh viên trong Registry</span>
+          <span class="metric-label">Tổng sinh viên trong danh sách</span>
         </div>
         <strong class="metric-value">{{ totalStudents }}</strong>
         <span class="metric-trend">Nguồn dữ liệu trường nhập</span>
@@ -236,7 +236,7 @@ function resetImportModal() {
 
       <BaseCard>
         <div class="metric-header">
-          <span class="metric-label">Hồ sơ ACTIVE (Được phép đăng ký)</span>
+          <span class="metric-label">Hồ sơ đang hoạt động</span>
         </div>
         <strong class="metric-value" style="color: var(--color-primary);">{{ activeCount }}</strong>
         <span class="metric-trend">Sẵn sàng đối chiếu đăng ký KTX</span>
@@ -399,7 +399,7 @@ function resetImportModal() {
         <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px dashed var(--color-border); padding-top: 1rem;">
           <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
             <BaseButton type="button" variant="tertiary" size="sm" @click="handleDownloadTemplate">
-              Tải file mẫu Excel (.xlsx)
+              Tải file mẫu Excel
             </BaseButton>
           </div>
           <span style="font-size: 0.78rem; color: var(--color-muted);">Giới hạn tối đa 5MB</span>
@@ -474,7 +474,7 @@ function resetImportModal() {
             <polyline points="20 6 9 17 4 12" />
           </svg>
         </div>
-        <h3>Import danh sách sinh viên hoàn tất!</h3>
+        <h3>Nhập danh sách sinh viên hoàn tất!</h3>
         <p style="color: var(--color-muted); font-size: 0.9rem; max-width: 25rem;">
           Đã xử lý {{ importSummary.total }} dòng: Thêm mới <strong>{{ importSummary.inserted }}</strong> sinh viên, cập nhật <strong>{{ importSummary.updated }}</strong> sinh viên.
         </p>
@@ -492,7 +492,7 @@ function resetImportModal() {
         <div v-else-if="importStep === 'preview'" style="display: flex; gap: 0.75rem;">
           <BaseButton type="button" variant="ghost" @click="importStep = 'upload'">Chọn file khác</BaseButton>
           <BaseButton type="button" :loading="confirmLoading" @click="handleConfirmImport">
-            Xác nhận Import vào DB
+            Xác nhận nhập vào hệ thống
           </BaseButton>
         </div>
 
@@ -505,6 +505,13 @@ function resetImportModal() {
 </template>
 
 <style scoped>
+.registry-header-actions {
+  display: grid;
+  gap: 0.75rem;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  width: min(100%, 36rem);
+}
+
 .registry-alert {
   align-items: center;
   border-color: color-mix(in srgb, var(--color-warning) 45%, var(--color-border));
@@ -528,6 +535,11 @@ function resetImportModal() {
 }
 
 @media (max-width: 640px) {
+  .registry-header-actions {
+    grid-template-columns: 1fr;
+    width: 100%;
+  }
+
   .registry-alert {
     align-items: stretch;
     flex-direction: column;

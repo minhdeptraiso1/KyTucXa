@@ -7,6 +7,7 @@ public final class SecurityEndpoints {
     public static final String[] PUBLIC = {
             "/auth/**",
             "/public/**",
+            "/uploads/**",
             "/payments/vnpay/callback",
             "/payments/vnpay/ipn",
             "/swagger-ui/**",

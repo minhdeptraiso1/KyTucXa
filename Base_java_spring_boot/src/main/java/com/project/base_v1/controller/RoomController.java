@@ -4,10 +4,12 @@ import com.project.base_v1.dto.request.facility.CreateRoomRequest;
 import com.project.base_v1.dto.request.facility.UpdateRoomRequest;
 import com.project.base_v1.dto.response.core.ApiResponseSever;
 import com.project.base_v1.dto.response.facility.RoomResponse;
+import com.project.base_v1.dto.response.facility.RoomImageResponse;
 import com.project.base_v1.enums.GenderType;
 import com.project.base_v1.enums.RoomStatus;
 import com.project.base_v1.enums.RoomType;
 import com.project.base_v1.service.RoomService;
+import com.project.base_v1.service.RoomImageStorageService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -20,6 +22,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import java.util.List;
 import java.util.UUID;
@@ -33,6 +37,20 @@ import java.util.UUID;
 public class RoomController {
 
     RoomService roomService;
+    RoomImageStorageService roomImageStorageService;
+
+    @Operation(summary = "Tải ảnh đại diện phòng từ máy")
+    @PostMapping(value = "/images", consumes = org.springframework.http.MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PreAuthorize("hasAnyRole('ADMIN', 'STAFF')")
+    public ApiResponseSever<RoomImageResponse> uploadRoomImage(
+            @RequestParam("file") MultipartFile file) {
+        String fileName = roomImageStorageService.store(file);
+        String imageUrl = ServletUriComponentsBuilder.fromCurrentContextPath()
+                .path("/uploads/rooms/")
+                .path(fileName)
+                .toUriString();
+        return ApiResponseSever.ok(new RoomImageResponse(imageUrl));
+    }
 
     @Operation(summary = "Tạo mới phòng ký túc xá")
     @PostMapping
